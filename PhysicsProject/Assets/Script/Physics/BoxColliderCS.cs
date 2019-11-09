@@ -92,15 +92,19 @@ public class BoxColliderCS : MonoBehaviour
 
 	public bool CheckCollision(RigidbodyCS rigid, out Vector3 dir, bool isCheck, bool isCheckNext)
 	{
+		
 		bool result = false;
 		Vector3 resultDir = Vector3.zero;
         Vector3 distance = centerPosition - rigid.colliderCS.centerPosition;
+		float Overlap = 0;
 
-        if ( (maxLength + rigid.colliderCS.maxLength) * 1.5f > distance.magnitude)
+		if ( (maxLength + rigid.colliderCS.maxLength) * 1.5f > distance.magnitude)
         {
-            foreach ( Vector3 point in rigid.colliderCS.points)
-            {
-                Vector3 p = Vector3.zero;
+
+		recheck:
+			foreach ( Vector3 point in rigid.colliderCS.points)
+			{
+				Vector3 p = Vector3.zero;
                 if (isCheckNext)
                     p = point + rigid.velocity * Time.deltaTime/2;
                 else
@@ -115,10 +119,8 @@ public class BoxColliderCS : MonoBehaviour
                 float projectX = (Vector3.Project(p - centerPosition, this.transform.right)).magnitude ;
                 float projectY = (Vector3.Project(p - centerPosition, this.transform.up)).magnitude ;
                 float projectZ = (Vector3.Project(p - centerPosition, this.transform.forward)).magnitude ;
-
-                //Debug.Log("@"+intervalY);
-                //if( projectX< 0.5f && projectX > -0.5f)
-
+				
+				
                 projectX -= length.x;
                 projectY -= length.y;
                 projectZ -= length.z;
@@ -130,7 +132,7 @@ public class BoxColliderCS : MonoBehaviour
                     //Debug.Log("ASDF@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
 
                     //Debug.Log(rigid.velocity.magnitude);
-                    float Overlap = Mathf.Max(projectX, projectY, projectZ);
+                    Overlap = Mathf.Max(projectX, projectY, projectZ);
                     if (Overlap < -0.1f)
                     {
                         Overlap -= rigid.velocity.magnitude * Time.deltaTime*1.1f;
@@ -142,64 +144,60 @@ public class BoxColliderCS : MonoBehaviour
                     
                     if (!isCheck)
                     {
-                        //rigid.transform.position -= new Vector3(intervalX, intervalY, intervalZ);
-                        //Debug.Log(distanceX + " / " + distanceY + " / " + distanceZ);
+						//rigid.transform.position -= new Vector3(intervalX, intervalY, intervalZ);
+						//Debug.Log(distanceX + " / " + distanceY + " / " + distanceZ);
+						/*
                         float intervalX = projectX / length.x;
                         float intervalY = projectY / length.y;
                         float intervalZ = projectZ / length.z;
+						*/
+						float intervalX = projectX ;
+						float intervalY = projectY ;
+						float intervalZ = projectZ ;
+						
+
+						Debug.Log(intervalX + " / " + intervalY + " / " + intervalZ);
+						//Debug.Log("==========");
 
 
-                        //Debug.Log(intervalX + " / " + intervalY + " / " + intervalZ);
-                        //Debug.Log("==========");
-                        if (this.CompareTag("Finish"))
-                            Debug.Log(this.name + " : "+projectX + " / " + projectY + " / " + projectZ);
-
-                        /*
-                        if (Mathf.Abs( p.x - (p +rigid.velocity.normalized).x)<0.05f)
-                        {
-                            intervalX -= 5;
-                        }else if (Mathf.Abs(p.y - (p + rigid.velocity.normalized).y)< 0.05f)
-                        {
-                            intervalY -= 5;
-                        }
-                        else if (Mathf.Abs(p.z - (p + rigid.velocity.normalized).z)< 0.05f)
-                        {
-                            intervalZ -= 5;
-                        }
-                        */
-
-                        if (intervalX > intervalY && intervalX > intervalZ)
+						if (intervalX > intervalY && intervalX > intervalZ)
                         {
                             
                             resultDir = (p - centerPoints[0]).magnitude < (p - centerPoints[1]).magnitude
                                 ? this.transform.right : -this.transform.right;
-                                
-                            //resultDir = this.transform.right;
 
-                            //rigid.transform.position += resultDir * projectX;
-                            //Debug.Log(this.name + "x" + Overlap);
-                        }
+							//resultDir = this.transform.right;
+
+							//rigid.transform.position += resultDir * projectX;
+							//Debug.Log(this.name + "x" + Overlap);
+							Overlap = projectX;
+							Debug.Log(Overlap);
+						}
                         else if (intervalY > intervalX && intervalY > intervalZ)
                         {
                             
                             resultDir = (p - centerPoints[2]).magnitude < (p - centerPoints[3]).magnitude
                                 ? this.transform.up : -this.transform.up;
-                                
 
-                            //resultDir = this.transform.up;
-                            //rigid.transform.position += resultDir * projectY;
-                            //Debug.Log(this.name +"y" + Overlap);
-                        }
+
+							//resultDir = this.transform.up;
+							//rigid.transform.position += resultDir * projectY;
+							//Debug.Log(this.name +"y" + Overlap);
+							Overlap = projectY;
+							Debug.Log(Overlap);
+						}
                         else if (intervalZ > intervalY && intervalZ > intervalX)
                         {
                             
                             resultDir = (p - centerPoints[4]).magnitude < (p - centerPoints[5]).magnitude
                                 ? this.transform.forward : -this.transform.forward;
-                                
-                            //resultDir = this.transform.forward;
 
-                            //Debug.Log(this.name + "z" + Overlap);
-                        }
+							//resultDir = this.transform.forward;
+
+							//Debug.Log(this.name + "z" + Overlap);
+							Overlap = projectZ;
+							Debug.Log(Overlap);
+						}
                         else
                         {
                             resultDir = rigid.velocity.normalized;
@@ -210,28 +208,38 @@ public class BoxColliderCS : MonoBehaviour
 
                     if (Overlap != 0)
                     {
+						/*
                         float minMove = rigid.velocity.magnitude * Time.deltaTime * 2f;
                         Overlap = Mathf.Abs(Overlap) < minMove ? -minMove : Overlap;
                         float maxMove = rigid.velocity.magnitude * Time.deltaTime * 2.5f;
                         Overlap = Mathf.Abs(Overlap) < minMove ? -minMove : Overlap;
                         Overlap = Mathf.Abs(Overlap) > maxMove ? -maxMove : Overlap;
-                        rigid.transform.position += rigid.velocity.normalized * Overlap;
+						*/
+
                         //rigid.velocity *= -1;
                         //result = false;
                         rigid.isMovable = false;
-                        Debug.Log(resultDir);
-                    }
+						rigid.transform.position -= resultDir * Overlap;
+						Debug.Log(this.name + " => "+isCheck+" : " + resultDir + " : " + projectX + " / " + projectY + " / " + projectZ);
+						Debug.Log("==========");
+					}
+					
+						
 
-                    result = true;
+					result = true;
 
                     //Debug.Log(resultDir);
                     break;
-                }
-            }
-            //Debug.Log("====");
+				}
+			}
+		/*
+			if (Mathf.Abs(Overlap) > 0.1f)
+				goto recheck;
+				*/
+			//Debug.Log("====");
 
 
-        }
+		}
 
 
 
