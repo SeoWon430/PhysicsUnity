@@ -146,15 +146,17 @@ public class BoxColliderCS : MonoBehaviour
                     {
 						//rigid.transform.position -= new Vector3(intervalX, intervalY, intervalZ);
 						//Debug.Log(distanceX + " / " + distanceY + " / " + distanceZ);
-						/*
+						
                         float intervalX = projectX / length.x;
                         float intervalY = projectY / length.y;
                         float intervalZ = projectZ / length.z;
-						*/
+
+                        float interval = Vector3.Distance(this.transform.position, rigid.transform.position);
+						/*
 						float intervalX = projectX ;
 						float intervalY = projectY ;
 						float intervalZ = projectZ ;
-						
+						*/
 
 						Debug.Log(intervalX + " / " + intervalY + " / " + intervalZ);
 						//Debug.Log("==========");
@@ -184,7 +186,7 @@ public class BoxColliderCS : MonoBehaviour
 							//rigid.transform.position += resultDir * projectY;
 							//Debug.Log(this.name +"y" + Overlap);
 							Overlap = projectY;
-							Debug.Log(Overlap);
+                            Debug.Log(Overlap);
 						}
                         else if (intervalZ > intervalY && intervalZ > intervalX)
                         {
@@ -203,6 +205,10 @@ public class BoxColliderCS : MonoBehaviour
                             resultDir = rigid.velocity.normalized;
                             Debug.Log("SFDGA");
                         }
+
+
+
+
                     }
 
 
