@@ -50,73 +50,100 @@ public class PhysicsManager : MonoBehaviour
     void FixedUpdate()
     {
 		//maxSizeLength;
-		foreach( var rigidObject in rigidbodyList)
-		{
-			foreach(var collObject in colliderList)
-			{
-				Vector3 forceDirection = Vector3.zero;
-                bool isContain = rigidObject.contactObjects.ContainsKey(collObject);
-                bool isCollision = false;
+		foreach( RigidbodyCS rigidObject in rigidbodyList)
+        {
+            if (rigidObject.useGravity)
+            {
+                rigidObject.AddForce(gravity);
+            }
+            foreach (BoxColliderCS collObject in colliderList)
+            {
 
-                if (rigidObject.collisionDetection == RigidbodyCS.Detection.Default)
-                    isCollision = collObject.CheckCollision(rigidObject, out forceDirection, isContain, false);
-                else
-                    isCollision = collObject.CheckCollision(rigidObject, out forceDirection, isContain, true);
-                //Debug.Log(isContain + " / " + isCollision);
-
-
-                if (isCollision && !isContain)
-                {
-                    //CollisionCS coll = new CollisionCS(collObject.gameObject, forceDirection);4
-                    //forceDirection *= Mathf.Cos(collObject.transform.eulerAngles.z * Mathf.Deg2Rad);
-                    //forceDirection *= Mathf.Cos(collObject.transform.eulerAngles.x * Mathf.Deg2Rad);
-                    //Debug.Log(forceDirection);
-                    /*
-                    Vector3 normalForce = new Vector3(rigidObject.velocity.x * Mathf.Abs(forceDirection.x)
-                                                , rigidObject.velocity.y * Mathf.Abs(forceDirection.y)
-                                                , rigidObject.velocity.z * Mathf.Abs(forceDirection.z));
-                    normalForce = Vector3.Project(normalForce, forceDirection);
-
-                    Debug.Log(forceDirection.magnitude + "/"+ normalForce.magnitude + "/" + rigidObject.velocity.magnitude);
-
-                    Debug.DrawRay(rigidObject.transform.position, forceDirection, Color.red, 30);
-                    Debug.DrawRay(rigidObject.transform.position, normalForce, Color.green, 30);
-                    */
-                    rigidObject.contactObjects.Add(collObject, forceDirection);
-                    //rigidObject.contactObjects.Add(collObject, normalForce);
-
-
-
-                    //collisionEnter
-                    rigidObject.SendMessage("OnCollisionEnterF", collObject, SendMessageOptions.DontRequireReceiver);
-                    //Debug.Log(forceDirection);
-                }
-                else if (!isCollision && isContain)
-                {
-                    rigidObject.contactObjects.Remove(collObject);
-                    //collisionExit
-                    rigidObject.SendMessage("OnCollisionExitF", collObject, SendMessageOptions.DontRequireReceiver);
-
-
-                }
-                else if (isCollision && isContain)
-                {
-                    //collisionStay
-                    rigidObject.SendMessage("OnCollisionStayF", collObject, SendMessageOptions.DontRequireReceiver);
-
-
-                }
+                bool isTrigger = rigidObject.colliderCS.isTrigger || collObject.isTrigger;
+                CheckCollision(rigidObject, collObject, isTrigger);
 
 
             }
 
             rigidObject.MovementForce();
-
+            rigidObject.VelocityMove();
             //deltaTime += (Time.deltaTime - deltaTime) * 0.1f;
             //Debug.Log(1.0f / deltaTime);
         }
 
 	}
+
+    private void CheckCollision(RigidbodyCS rigidObject, BoxColliderCS collObject, bool isTrigger)
+    {
+
+        Vector3 forceDirection = Vector3.zero;
+        bool isContain = rigidObject.contactObjects.ContainsKey(collObject);
+        bool isCollision = false;
+
+        if (rigidObject.collisionDetection == RigidbodyCS.Detection.Default)
+            isCollision = collObject.CheckCollision(rigidObject, out forceDirection, isContain, false);
+        else
+            isCollision = collObject.CheckCollision(rigidObject, out forceDirection, isContain, true);
+        //Debug.Log(isContain + " / " + isCollision);
+
+
+        if (isCollision && !isContain)
+        {
+            //CollisionCS coll = new CollisionCS(collObject.gameObject, forceDirection);4
+            //forceDirection *= Mathf.Cos(collObject.transform.eulerAngles.z * Mathf.Deg2Rad);
+            //forceDirection *= Mathf.Cos(collObject.transform.eulerAngles.x * Mathf.Deg2Rad);
+            //Debug.Log(forceDirection);
+            /*
+            Vector3 normalForce = new Vector3(rigidObject.velocity.x * Mathf.Abs(forceDirection.x)
+                                        , rigidObject.velocity.y * Mathf.Abs(forceDirection.y)
+                                        , rigidObject.velocity.z * Mathf.Abs(forceDirection.z));
+            normalForce = Vector3.Project(normalForce, forceDirection);
+
+            Debug.Log(forceDirection.magnitude + "/"+ normalForce.magnitude + "/" + rigidObject.velocity.magnitude);
+            
+            */
+
+
+
+
+            //Vector3 normalForce = new Vector3(rigidObject.velocity.x * Mathf.Abs(forceDirection.x), rigidObject.velocity.y * Mathf.Abs(forceDirection.y), rigidObject.velocity.z * Mathf.Abs(forceDirection.z));
+            //normalForce = Vector3.Project(normalForce, forceDirection);
+
+            //Debug.DrawRay(rigidObject.transform.position, normalForce, Color.red, 30);
+            rigidObject.contactObjects.Add(collObject, forceDirection);
+            //rigidObject.contactObjects.Add(collObject, normalForce*0.5f);
+
+
+
+            //collisionEnter
+            rigidObject.SendMessage("OnCollisionEnterF", collObject, SendMessageOptions.DontRequireReceiver);
+            //Debug.Log(forceDirection);
+        }
+        else if (!isCollision && isContain)
+        {
+            rigidObject.contactObjects.Remove(collObject);
+            //collisionExit
+            rigidObject.SendMessage("OnCollisionExitF", collObject, SendMessageOptions.DontRequireReceiver);
+
+
+        }
+        else if (isCollision && isContain)
+        {
+            //collisionStay
+            rigidObject.SendMessage("OnCollisionStayF", collObject, SendMessageOptions.DontRequireReceiver);
+
+
+        }
+        else
+        {
+            Debug.Log("none");
+            
+        }
+            
+    }
+
+
+
 
     bool RayCast(Vector3 start, Vector3 end, out BoxCollider collider)
     {

@@ -57,78 +57,72 @@ public class RigidbodyCS : MonoBehaviour
 	void FixedUpdate()
 	{
 
-        if (useGravity)
-		{
-			AddForce(PhysicsManager.instance.gravity);
-        }
-
-
-
-        //Debug.Log(contactObjects.Values);
-        //Debug.Log("3" + transform.position.y);
-        //Debug.Log(contactObjects.Count);
 
     }
 	private void LateUpdate()
 	{
-        if (velocity.magnitude > maxSpeed)
-            velocity = velocity.normalized * maxSpeed;
-
-        if (velocity.magnitude > 0.1f)
-        {
-            VelocityMove();
-        }
-        else
-            velocity = Vector3.zero;
+        //Debug.Log(contactObjects.Count);
     }
 
+    
 
     public void MovementForce()
     {
-
         if (contactObjects.Count > 0)
-            foreach (var coll in contactObjects)
-            {
-                Vector3 dir = coll.Value.normalized;
-                Vector3 normalForce = new Vector3(velocity.x * Mathf.Abs(dir.x), velocity.y * Mathf.Abs(dir.y), velocity.z * Mathf.Abs(dir.z));
-                //Vector3 normalForce = coll.Value;
+            //Debug.Log("ADSG");
+        foreach (var coll in contactObjects)
+        {
+            Vector3 dir = coll.Value.normalized;
+            Vector3 normalForce = new Vector3(velocity.x * Mathf.Abs(dir.x), velocity.y * Mathf.Abs(dir.y), velocity.z * Mathf.Abs(dir.z));
+            //Vector3 normalForce = coll.Value;
 
 
-                //normalForce = Vector3.Scale(velocity, dir);
-                //normalForce = dir * velocity.magnitude;
-                //Debug.Log("@" + coll.Key .gameObject.name + " : "+ dir + " / " + velocity+" / " + verticalVelocity);
+            //normalForce = Vector3.Scale(velocity, dir);
+            //normalForce = dir * velocity.magnitude;
+            //Debug.Log("@" + coll.Key .gameObject.name + " : "+ dir + " / " + velocity+" / " + verticalVelocity);
 
-                //normalForce = -dir * velocity.magnitude * Mathf.Cos(coll.Key.transform.eulerAngles.x * Mathf.Deg2Rad);
-                //Debug.Log(-normalForce + " / " + dir + " / " + Mathf.Cos(coll.Key.transform.eulerAngles.x * Mathf.Deg2Rad));
-
-
-                float frictionForce = (coll.Key.fricion + colliderCS.fricion) * normalForce.magnitude;
-
-                normalForce *= (1 + this.colliderCS.boundness + coll.Key.boundness);
-                //normalForce += new Vector3(Mathf.Tan(coll.Key.transform.eulerAngles.z * Mathf.Deg2Rad), 0, -Mathf.Tan(coll.Key.transform.eulerAngles.x * Mathf.Deg2Rad));
-                //normalForce = -dir * normalForce.magnitude * Mathf.Cos(coll.Key.transform.eulerAngles.x * Mathf.Deg2Rad);
-                //if(coll.Key.name == "Cube")
-
-                /*
-                Vector3 project = Vector3.Project(normalForce, dir).normalized;
-                float angle = Vector3.Angle(normalForce, project);
-                normalForce = project * normalForce.magnitude * Mathf.Cos(angle * Mathf.Deg2Rad);
-                */
-                //Debug.Log(1/Mathf.Cos(angle * Mathf.Deg2Rad));
-
-                normalForce = Vector3.Project(normalForce, dir)*1.225f;
-
-                //Debug.Log(dir.x + " / " + dir.y + " / " + dir.z);
-                //Debug.Log(normalForce.magnitude +" / " + velocity.y);
-                //Debug.DrawRay(this.transform.position, dir * 10, Color.red, 30);
-                //Debug.DrawRay(this.transform.position, -normalForce * 10, Color.green, 30);
-                AddForceNormal(-normalForce);
+            //normalForce = -dir * velocity.magnitude * Mathf.Cos(coll.Key.transform.eulerAngles.x * Mathf.Deg2Rad);
+            //Debug.Log(-normalForce + " / " + dir + " / " + Mathf.Cos(coll.Key.transform.eulerAngles.x * Mathf.Deg2Rad));
 
 
-                //AddForceNormal(-velocity.normalized * frictionForce);
+            float frictionForce = (coll.Key.fricion + colliderCS.fricion) * normalForce.magnitude;
+
+            normalForce *= (1 + this.colliderCS.boundness + coll.Key.boundness);
+
+            //normalForce += new Vector3(Mathf.Tan(coll.Key.transform.eulerAngles.z * Mathf.Deg2Rad), 0, -Mathf.Tan(coll.Key.transform.eulerAngles.x * Mathf.Deg2Rad));
+            //normalForce = -dir * normalForce.magnitude * Mathf.Cos(coll.Key.transform.eulerAngles.x * Mathf.Deg2Rad);
+            //if(coll.Key.name == "Cube")
+
+            /*
+            Vector3 project = Vector3.Project(normalForce, dir).normalized;
+            float angle = Vector3.Angle(normalForce, project);
+            normalForce = project * normalForce.magnitude * Mathf.Cos(angle * Mathf.Deg2Rad);
+            */
+            //Debug.Log(1/Mathf.Cos(angle * Mathf.Deg2Rad));
+            float project = Vector3.Project(dir, normalForce).magnitude;
+            normalForce = Vector3.Project(normalForce, dir)* project;
+
+            //Debug.Log(dir.x + " / " + dir.y + " / " + dir.z);
+            //Debug.Log(normalForce.magnitude +" / " + velocity.y);
+            //Debug.DrawRay(this.transform.position, dir * 10, Color.red, 30);
+            //Debug.DrawRay(this.transform.position, -normalForce * 10, Color.green, 30);
 
 
-            }
+
+
+            //float project = Vector3.Project(dir, normalForce).magnitude;
+            //Debug.Log(project);
+            //normalForce = -dir  * normalForce.magnitude * project;
+            AddForceNormal(-normalForce);
+
+            // a:b = c:d
+            //b.c = a.d
+            //project : normalForce.magnitude = 1 : x
+            // normalForce.magnitude = x . project
+            //AddForceNormal(-velocity.normalized * frictionForce);
+
+
+        }
 
     }
 
@@ -169,9 +163,17 @@ public class RigidbodyCS : MonoBehaviour
     }
 
 
-	private void VelocityMove()
+	public void VelocityMove()
     {
-        this.transform.position += velocity * Time.deltaTime;
+        if (velocity.magnitude > maxSpeed)
+            velocity = velocity.normalized * maxSpeed;
+
+        if (velocity.magnitude > 0.1f)
+        {
+            this.transform.position += velocity * Time.deltaTime;
+        }
+        else
+            velocity = Vector3.zero;
 	}
 
 	public void AddForce(Vector3 force)
@@ -193,6 +195,7 @@ public class RigidbodyCS : MonoBehaviour
         //Debug.Log(velocity.magnitude + " / " + force.magnitude);
         velocity += force / mass;
 
+        //Debug.DrawRay(this.transform.position, velocity * 10, Color.green, 30);
     }
 
 
