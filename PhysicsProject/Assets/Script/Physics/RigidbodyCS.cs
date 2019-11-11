@@ -8,8 +8,8 @@ public class RigidbodyCS : MonoBehaviour
 	public bool useGravity=true;
 	public bool isKinematic=false;
     public float maxSpeed = 100;
-
-    public bool isMovable=true; 
+    Coroutine c;
+    bool test = false;
 
     public enum Detection
     {
@@ -28,7 +28,6 @@ public class RigidbodyCS : MonoBehaviour
 	//public List<GameObject> contactObjects;
 	//public Dictionary<GameObject, Vector3> contactObjects;
 	public Dictionary<BoxColliderCS, Vector3> contactObjects;
-    public Dictionary<string, Vector3> forceDic;
 
 	private void Awake()
 	{
@@ -46,7 +45,6 @@ public class RigidbodyCS : MonoBehaviour
 		//contactObjects = new Dictionary<GameObject, Vector3>();
 		contactObjects = new Dictionary<BoxColliderCS, Vector3>();
 
-        isMovable = true;
 
     }
 
@@ -65,7 +63,6 @@ public class RigidbodyCS : MonoBehaviour
         }
 
 
-        //Debug.DrawRay(this.transform.position, velocity, Color.red, 30);
 
         //Debug.Log(contactObjects.Values);
         //Debug.Log("3" + transform.position.y);
@@ -77,37 +74,104 @@ public class RigidbodyCS : MonoBehaviour
         if (velocity.magnitude > maxSpeed)
             velocity = velocity.normalized * maxSpeed;
 
-        if (velocity.magnitude > 0.01f && isMovable)
+        if (velocity.magnitude > 0.1f)
         {
             VelocityMove();
         }
+        else
+            velocity = Vector3.zero;
     }
 
 
-    public void ForceSum()
+    public void MovementForce()
     {
 
         if (contactObjects.Count > 0)
             foreach (var coll in contactObjects)
             {
-                Vector3 dir = coll.Value;
-                //Debug.Log(force);
-                Vector3 verticalVelocity = new Vector3(velocity.x * Mathf.Abs(dir.x),
-                                                velocity.y * Mathf.Abs(dir.y),
-                                                velocity.z * Mathf.Abs(dir.z));
+                Vector3 dir = coll.Value.normalized;
+                Vector3 normalForce = new Vector3(velocity.x * Mathf.Abs(dir.x), velocity.y * Mathf.Abs(dir.y), velocity.z * Mathf.Abs(dir.z));
+                //Vector3 normalForce = coll.Value;
+
+
+                //normalForce = Vector3.Scale(velocity, dir);
+                //normalForce = dir * velocity.magnitude;
                 //Debug.Log("@" + coll.Key .gameObject.name + " : "+ dir + " / " + velocity+" / " + verticalVelocity);
 
-                verticalVelocity *= (1 + this.colliderCS.boundness + coll.Key.boundness);
-                AddForceNormal(-verticalVelocity);
-                Debug.DrawRay(this.transform.position, verticalVelocity, Color.green, 30);
+                //normalForce = -dir * velocity.magnitude * Mathf.Cos(coll.Key.transform.eulerAngles.x * Mathf.Deg2Rad);
+                //Debug.Log(-normalForce + " / " + dir + " / " + Mathf.Cos(coll.Key.transform.eulerAngles.x * Mathf.Deg2Rad));
+
+
+                float frictionForce = (coll.Key.fricion + colliderCS.fricion) * normalForce.magnitude;
+
+                normalForce *= (1 + this.colliderCS.boundness + coll.Key.boundness);
+                //normalForce += new Vector3(Mathf.Tan(coll.Key.transform.eulerAngles.z * Mathf.Deg2Rad), 0, -Mathf.Tan(coll.Key.transform.eulerAngles.x * Mathf.Deg2Rad));
+                //normalForce = -dir * normalForce.magnitude * Mathf.Cos(coll.Key.transform.eulerAngles.x * Mathf.Deg2Rad);
+                //if(coll.Key.name == "Cube")
+
+                /*
+                Vector3 project = Vector3.Project(normalForce, dir).normalized;
+                float angle = Vector3.Angle(normalForce, project);
+                normalForce = project * normalForce.magnitude * Mathf.Cos(angle * Mathf.Deg2Rad);
+                */
+                //Debug.Log(1/Mathf.Cos(angle * Mathf.Deg2Rad));
+
+                normalForce = Vector3.Project(normalForce, dir)*1.225f;
+
+                //Debug.Log(dir.x + " / " + dir.y + " / " + dir.z);
+                //Debug.Log(normalForce.magnitude +" / " + velocity.y);
+                //Debug.DrawRay(this.transform.position, dir * 10, Color.red, 30);
+                //Debug.DrawRay(this.transform.position, -normalForce * 10, Color.green, 30);
+                AddForceNormal(-normalForce);
+
+
+                //AddForceNormal(-velocity.normalized * frictionForce);
+
+
             }
 
-        isMovable = true;
     }
 
+
+    IEnumerator RotateForce(Vector3 rot, Vector3 point)
+    {
+
+        float rotX=0, rotY=0, rotZ=0;
+        while (true)
+        {
+            rotX += rot.x * Time.deltaTime;
+            rotY += rot.y * Time.deltaTime;
+            rotZ += rot.z * Time.deltaTime;
+
+            if (rotX > rot.x || rotY > rot.y || rotY > rot.z)
+            {
+                Debug.Log(rot.x + " / " + rotX);
+                break;
+            }
+
+        }
+        yield return null;
+
+
+    }
+
+    public void FrictionForce() {
+
+        float totalFriction = colliderCS.fricion;
+
+        foreach (var coll in contactObjects)
+        {
+            totalFriction += coll.Key.fricion;
+        }
+        velocity *= (1 - totalFriction);
+        Debug.Log(totalFriction);
+
+    }
+
+
 	private void VelocityMove()
-	{
-		this.transform.position += velocity * Time.deltaTime;
+    {
+        this.transform.position += velocity * Time.deltaTime;
 	}
 
 	public void AddForce(Vector3 force)
@@ -126,6 +190,7 @@ public class RigidbodyCS : MonoBehaviour
 
     public void AddForceNormal(Vector3 force)
     {
+        //Debug.Log(velocity.magnitude + " / " + force.magnitude);
         velocity += force / mass;
 
     }
@@ -135,15 +200,16 @@ public class RigidbodyCS : MonoBehaviour
 
     void OnCollisionEnterF(BoxColliderCS coll)
     {
-        //Debug.Log("Enter : " + coll.gameObject.name + "/"+contactObjects.Count);
+        //c =StartCoroutine(RotateForce(coll.transform.eulerAngles, coll.contactPoint));
+        Debug.Log("Enter : " + coll.gameObject.name + "/"+contactObjects.Count);
     }
     void OnCollisionExitF(BoxColliderCS coll)
     {
-        //Debug.Log("Exit : " + coll.gameObject.name + "/" + contactObjects.Count);
+        Debug.Log("Exit : " + coll.gameObject.name + "/" + contactObjects.Count);
     }
     void OnCollisionStayF(BoxColliderCS coll)
     {
-        //Debug.Log("Stay : " + coll.gameObject.name);
+        Debug.Log("Stay : " + coll.gameObject.name);
     }
 
 }

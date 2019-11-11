@@ -71,7 +71,22 @@ public class PhysicsManager : MonoBehaviour
                     //forceDirection *= Mathf.Cos(collObject.transform.eulerAngles.z * Mathf.Deg2Rad);
                     //forceDirection *= Mathf.Cos(collObject.transform.eulerAngles.x * Mathf.Deg2Rad);
                     //Debug.Log(forceDirection);
+                    /*
+                    Vector3 normalForce = new Vector3(rigidObject.velocity.x * Mathf.Abs(forceDirection.x)
+                                                , rigidObject.velocity.y * Mathf.Abs(forceDirection.y)
+                                                , rigidObject.velocity.z * Mathf.Abs(forceDirection.z));
+                    normalForce = Vector3.Project(normalForce, forceDirection);
+
+                    Debug.Log(forceDirection.magnitude + "/"+ normalForce.magnitude + "/" + rigidObject.velocity.magnitude);
+
+                    Debug.DrawRay(rigidObject.transform.position, forceDirection, Color.red, 30);
+                    Debug.DrawRay(rigidObject.transform.position, normalForce, Color.green, 30);
+                    */
                     rigidObject.contactObjects.Add(collObject, forceDirection);
+                    //rigidObject.contactObjects.Add(collObject, normalForce);
+
+
+
                     //collisionEnter
                     rigidObject.SendMessage("OnCollisionEnterF", collObject, SendMessageOptions.DontRequireReceiver);
                     //Debug.Log(forceDirection);
@@ -95,7 +110,7 @@ public class PhysicsManager : MonoBehaviour
 
             }
 
-            rigidObject.ForceSum();
+            rigidObject.MovementForce();
 
             //deltaTime += (Time.deltaTime - deltaTime) * 0.1f;
             //Debug.Log(1.0f / deltaTime);
