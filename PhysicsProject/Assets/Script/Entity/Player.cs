@@ -15,8 +15,16 @@ public class Player : MonoBehaviour
     }
 
     // Update is called once per frame
-    void Update()
+    void FixedUpdate()
     {
+        InputMove();
+
+
+    }
+
+    public void InputMove()
+    {
+
         float moveX = Input.GetAxis("Horizontal");
         float moveY = Input.GetAxis("Vertical");
 
@@ -33,8 +41,5 @@ public class Player : MonoBehaviour
         {
             rigid.AddForce(transform.up * 300);
         }
-
-
-
     }
 }
