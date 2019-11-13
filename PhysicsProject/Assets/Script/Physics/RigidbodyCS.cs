@@ -8,13 +8,16 @@ using UnityEngine;
 //충돌의 주체가 되는 물체
 public class RigidbodyCS : MonoBehaviour
 {
+    
     //현재 물체의 질량
 	public float mass=1;
 
     //공기저항
+    //대략적으로 구현
 	public float drag=0;
 
     //회전저항
+    //적용 방식이 확실하지 않아 구현x
 	public float angularDrag = 0.05f;
 
     //중력 적용 여부
@@ -24,8 +27,8 @@ public class RigidbodyCS : MonoBehaviour
     //false면 적용 ( true면 계산x)
 	public bool isKinematic=false;
 
-    //현재 물체가 가지는 최대 속력
-    //충돌이 완전하지 않아 제한함
+    //현재 물체가 가질 수 있는 최대 속력
+    //충돌 구현이 완전하지 않아 일단 제한함
     public float maxSpeed = 100;
 
 
@@ -51,8 +54,7 @@ public class RigidbodyCS : MonoBehaviour
 
     //현재 물체가 가지는 콜라이더
     //콜라이더는 박스콜라이더로 제한하여 구현
-	[HideInInspector]
-	public BoxColliderCS colliderCS;
+	public BoxColliderCS colliderCS { get; private set; }
 
     //현재 물체와 충돌한 콜라이더 리스트
     public List<ColliderCS> contactObjects;
@@ -61,6 +63,8 @@ public class RigidbodyCS : MonoBehaviour
     public List<ColliderCS> triggerObjects;
 
 
+
+    
     //초기화
 	private void Awake()
 	{
@@ -181,6 +185,8 @@ public class RigidbodyCS : MonoBehaviour
 	public void VelocityMove()
     {
         //속도는 공기저항에 따라 방해 받음
+        //실제 유니티의 drag가 구체적으로 어떻게 작용하는지 몰라 임의로 계산함
+        //(원래는 drag가 무한 일 경우에 물체는 움직이지 않는다고 함)
         velocity *= (1 - drag);
 
         //속도의 크기 제한

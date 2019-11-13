@@ -17,6 +17,7 @@ public class PhysicsManager : MonoBehaviour
     public List<RigidbodyCS> rigidbodyList;
 
     //현재 Scene에 적용할 중력
+    //기본적으로 -y방향 9.81
     public Vector3 gravity = new Vector3(0, -9.81f, 0);
 
     //float deltaTime = 0.0f;
@@ -68,6 +69,12 @@ public class PhysicsManager : MonoBehaviour
             //모든 BoxColliderCS 물체와 충돌 체크
             foreach (BoxColliderCS collObject in colliderList)
             {
+                //같은 레이어만 충돌 계산
+                // 유니티 Physics에서는 레이어 별로 충돌 계산 여부를 정할수 있지만 여기서는 일단 같은 경우만 계산
+                if (rigidObject.gameObject.layer != collObject.gameObject.layer)
+                    continue;
+
+
                 //RigidbodyCS 물체는 BoxColliderCS도 가지고 있으므로 자기 자신에 대해 충돌 체크를 방지
                 if (rigidObject.gameObject.Equals(collObject.gameObject))
                     continue;
@@ -100,6 +107,7 @@ public class PhysicsManager : MonoBehaviour
             rigidObject.VelocityMove();
         }
     }
+
 
 
     //RigidbodyCS와 BoxColliderCS 물체에 대해 충돌을 계산
@@ -186,14 +194,37 @@ public class PhysicsManager : MonoBehaviour
             {
                 rigidObject.SendMessage("OnTriggerStayF", collObject, SendMessageOptions.DontRequireReceiver);
             }
-
         }
-            
     }
 
 
 
+    //Instantiate 한 물체는 colliderList와 rigidbodyList에 있지 않기 때문에 추가
+    // Instantiate 할 경우 별도 호출로 추가
+    public void AddObject(GameObject obj)
+    {
+        BoxColliderCS collider = obj.GetComponent<BoxColliderCS>();
+        RigidbodyCS rigid = obj.GetComponent<RigidbodyCS>();
 
+        if (collider!=null)
+            colliderList.Add(collider);
+        if (rigid != null)
+            rigidbodyList.Add(rigid);
+    }
+    public void RemoveObject(GameObject obj)
+    {
+        BoxColliderCS collider = obj.GetComponent<BoxColliderCS>();
+        RigidbodyCS rigid = obj.GetComponent<RigidbodyCS>();
+
+        if (collider != null && colliderList.Contains(collider))
+            colliderList.Remove(collider);
+        if (rigid != null && rigidbodyList.Contains(rigid))
+            rigidbodyList.Remove(rigid);
+    }
+
+
+
+    //레이케스트 구현
     bool RayCast(Vector3 start, Vector3 end, out BoxCollider collider)
     {
         bool result = false;

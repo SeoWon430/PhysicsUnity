@@ -1110,7 +1110,6 @@ MonoBehaviour:
   isKinematic: 0
   maxSpeed: 80
   collisionDetection: 1
-  colliderCS: {fileID: 0}
   contactObjects: []
   triggerObjects: []
 --- !u!114 &725358012
@@ -1205,6 +1204,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   moveSpeed: 25
+  rotSpeed: 30
 --- !u!1 &731251823
 GameObject:
   m_ObjectHideFlags: 0
