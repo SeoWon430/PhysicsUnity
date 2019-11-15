@@ -20,7 +20,6 @@ public class PhysicsManager : MonoBehaviour
     //기본적으로 -y방향 9.81
     public Vector3 gravity = new Vector3(0, -9.81f, 0);
 
-    //float deltaTime = 0.0f;
 
 
     //현재 객체 static 저장
@@ -150,6 +149,7 @@ public class PhysicsManager : MonoBehaviour
             {
                 rigidObject.contactObjects.Add(collObject);
                 rigidObject.SendMessage("OnCollisionEnterF", collObject, SendMessageOptions.DontRequireReceiver);
+                collObject.SendMessage("OnCollisionEnterF", rigidObject.colliderCS, SendMessageOptions.DontRequireReceiver);
                 //rigidObject.ForceRotation(collObject.transform.rotation);
 
             }
@@ -158,6 +158,7 @@ public class PhysicsManager : MonoBehaviour
                 rigidObject.contactObjects.Remove(collObject);
                 //collisionExit
                 rigidObject.SendMessage("OnCollisionExitF", collObject, SendMessageOptions.DontRequireReceiver);
+                collObject.SendMessage("OnCollisionExitF", rigidObject.colliderCS, SendMessageOptions.DontRequireReceiver);
 
 
             }
@@ -165,6 +166,7 @@ public class PhysicsManager : MonoBehaviour
             {
                 //collisionStay
                 rigidObject.SendMessage("OnCollisionStayF", collObject, SendMessageOptions.DontRequireReceiver);
+                collObject.SendMessage("OnCollisionStayF", rigidObject.colliderCS, SendMessageOptions.DontRequireReceiver);
             }
             else
             {
@@ -184,15 +186,19 @@ public class PhysicsManager : MonoBehaviour
             {
                 rigidObject.triggerObjects.Add(collObject);
                 rigidObject.SendMessage("OnTriggerEnterF", collObject, SendMessageOptions.DontRequireReceiver);
+                collObject.SendMessage("OnTriggerEnterF", rigidObject.colliderCS, SendMessageOptions.DontRequireReceiver);
+                
             }
             else if (!isCollision && isContain)
             {
                 rigidObject.triggerObjects.Remove(collObject);
                 rigidObject.SendMessage("OnTriggerExitF", collObject, SendMessageOptions.DontRequireReceiver);
+                collObject.SendMessage("OnTriggerExitF", rigidObject.colliderCS, SendMessageOptions.DontRequireReceiver);
             }
             else if (isCollision && isContain)
             {
                 rigidObject.SendMessage("OnTriggerStayF", collObject, SendMessageOptions.DontRequireReceiver);
+                collObject.SendMessage("OnTriggerStayF", rigidObject.colliderCS, SendMessageOptions.DontRequireReceiver);
             }
         }
     }

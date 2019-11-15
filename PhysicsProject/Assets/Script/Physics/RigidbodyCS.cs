@@ -43,7 +43,7 @@ public class RigidbodyCS : MonoBehaviour
 
 
     //현재 물체가 가지는 총 속도
-	public Vector3 velocity { get; private set; }
+	public Vector3 velocity { get; set; }
 
     //외력에 의한 외력(물리엔진)
     //ex 수직항력
@@ -193,10 +193,15 @@ public class RigidbodyCS : MonoBehaviour
         if (velocity.magnitude > maxSpeed)
             velocity = velocity.normalized * maxSpeed;
 
+
         //속도가 일정량 이상인 경우만 물체 이동
         if (velocity.magnitude > 0.1f)
         {
             this.transform.position += velocity * Time.deltaTime;
+        }
+        else
+        {
+            velocity = Vector3.zero;
         }
 
         //이동 후 충돌해 있는 모든 물체와 겹쳐 있는지 판단
@@ -208,7 +213,7 @@ public class RigidbodyCS : MonoBehaviour
             float overlap = project.magnitude - coll.contactLength;
             if (overlap < 0)
             {
-                this.transform.position -= coll.contactNormal * overlap;
+                this.transform.position -= coll.contactNormal * overlap*0.95f;
             }
 
         }
@@ -227,8 +232,6 @@ public class RigidbodyCS : MonoBehaviour
         inputVelocity += force / mass * Time.deltaTime;
         velocity = forceVelocity + inputVelocity;
     }
-
-
 
     //자체 구현물리에 의한 외력
     //수직항력, 마찰력
@@ -315,11 +318,11 @@ public class RigidbodyCS : MonoBehaviour
     void OnTriggerEnterF(ColliderCS coll)
     {
         //c =StartCoroutine(RotateForce(coll.transform.eulerAngles, coll.contactPoint));
-        Debug.Log("Enter : " + coll.gameObject.name + "/" + contactObjects.Count);
+        //Log("Enter : " + coll.gameObject.name + "/" + contactObjects.Count);
     }
     void OnTriggerExitF(ColliderCS coll)
     {
-        Debug.Log("Exit : " + coll.gameObject.name + "/" + contactObjects.Count);
+        //Debug.Log("Exit : " + coll.gameObject.name + "/" + contactObjects.Count);
     }
     void OnTriggerStayF(ColliderCS coll)
     {
