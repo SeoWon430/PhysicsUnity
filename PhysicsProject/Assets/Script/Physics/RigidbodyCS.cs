@@ -52,9 +52,17 @@ public class RigidbodyCS : MonoBehaviour
     //사용자 입력에 의한 외력
     public Vector3 inputVelocity { get; private set; }
 
+
+
+    //현재 물체가 가지는 각속도
+    public Vector3 angularVelocity { get; private set; }
+    private Vector3 angularDegree;
+
+
+
     //현재 물체가 가지는 콜라이더
     //콜라이더는 박스콜라이더로 제한하여 구현
-	public BoxColliderCS colliderCS { get; private set; }
+    public BoxColliderCS colliderCS { get; private set; }
 
     //현재 물체와 충돌한 콜라이더 리스트
     public List<ColliderCS> contactObjects;
@@ -64,11 +72,21 @@ public class RigidbodyCS : MonoBehaviour
 
 
 
+    //AddForce() 할때 힘을 적용 방식
+    public enum ForceMode
+    {
+        Force,              //deltaTime 과 질량을 고려하여 힘 적용
+        Impulse,            //질량을 고려하여 힘 적용
+        Acceleration,       //deltaTime 을 고려하여 힘 적용
+        VelocityChange      //바로 힘 적용
+    }
+
     
     //초기화
 	private void Awake()
 	{
 		velocity = Vector3.zero;
+        angularDegree = Vector3.zero;
         inputVelocity = Vector3.zero;
         forceVelocity = Vector3.zero;
 
@@ -95,6 +113,11 @@ public class RigidbodyCS : MonoBehaviour
 
 	void FixedUpdate()
 	{
+
+        angularVelocity = this.transform.eulerAngles - angularDegree;
+        angularDegree = this.transform.eulerAngles;
+        //Debug.Log(angularVelocity);
+
         //물리에 의한 프레임 단위 실행은 FixedUpdate()에서 실행
         //FixedUpdate는 프레임 단위가 고정 되어 실행됨
         //순서 문제로 인해 PhysicsManager.cs 에서 관리 하기로 함
@@ -102,7 +125,6 @@ public class RigidbodyCS : MonoBehaviour
 
     private void LateUpdate()
 	{
-
     }
 
     
@@ -143,11 +165,11 @@ public class RigidbodyCS : MonoBehaviour
 
                 //탄성력을 포함한 외력 계산
                 //기본적으로 수직항력에 탄성력을 포함하여 적용
-                AddForceNormal(-normalForce);
+                AddForce(-normalForce, ForceMode.Impulse);
 
                 //마찰력에 의한 외력 계산
                 //움직이는 방향의 반대로 적용
-                AddForceNormal(-velocity.normalized * frictionForce);
+                AddForce(-velocity.normalized * frictionForce, ForceMode.Impulse);
 
 
                 //Debug.Log(dir.x + " / " + dir.y + " / " + dir.z);
@@ -158,29 +180,8 @@ public class RigidbodyCS : MonoBehaviour
     }
 
 
-    IEnumerator RotateForce(Vector3 rot, Vector3 point)
-    {
 
-        float rotX=0, rotY=0, rotZ=0;
-        while (true)
-        {
-            rotX += rot.x * Time.deltaTime;
-            rotY += rot.y * Time.deltaTime;
-            rotZ += rot.z * Time.deltaTime;
-
-            if (rotX > rot.x || rotY > rot.y || rotY > rot.z)
-            {
-                Debug.Log(rot.x + " / " + rotX);
-                break;
-            }
-
-        }
-        yield return null;
-    }
-
-
-
-    //속도에 의한 움직임
+    //속도(velocity)에 의한 움직임
     //PhysicsManager.cs에서 일괄 호출
 	public void VelocityMove()
     {
@@ -204,98 +205,82 @@ public class RigidbodyCS : MonoBehaviour
             velocity = Vector3.zero;
         }
 
-        //이동 후 충돌해 있는 모든 물체와 겹쳐 있는지 판단
-        //겹쳐진 양(overlap) 만큼 되돌림
-        foreach(ColliderCS coll in contactObjects)
+
+    }
+
+
+    //이동 후 충돌해 있는 모든 물체와 겹쳐 있는지 판단
+    //겹쳐진 양(overlap) 만큼 되돌림
+    public void Overlap()
+    {
+
+        foreach (ColliderCS coll in contactObjects)
         {
-            Vector3 distance = coll.centerPosition - colliderCS.points[coll.contactPointNumber] ;
+            Vector3 distance = coll.centerPosition - colliderCS.points[coll.contactPointNumber];
             Vector3 project = Vector3.Project(distance, coll.contactNormal);
             float overlap = project.magnitude - coll.contactLength;
             if (overlap < 0)
             {
-                this.transform.position -= coll.contactNormal * overlap*0.95f;
+
+                this.transform.position -= coll.contactNormal * overlap * 0.4f;
+                //Debug.Log(overlap);
+
             }
 
         }
-	}
+    }
 
 
 
-    //입력에 의한 외력
-    //힘 조절 편리를 위해 Time.deltaTime를 넣음
-    // F = m*a (/F는 force / m은 질량, a는 가속도)
-    // v= a*t (t는 시간 = Time.deltaTime)
-    public void AddForce(Vector3 force)
+    //외력적용 함수
+    //  F = m*a (F는 force / m은 질량 / a는 가속도)
+    //  v= a*t (t는 시간 = Time.deltaTime / v = velocity)
+    //  최종적으로 velocity값을 변경하여 물체가 이동하도록 함
+    //ForceMode로 질량과 시간 적용 여부 결정
+    public void AddForce(Vector3 force, ForceMode mode = ForceMode.Force)
     {
+        //이 물체가 물리적 계산을 안할 경우 외력을 주지 않도록 함
         if (isKinematic) return;
 
-        inputVelocity += force / mass * Time.deltaTime;
-        velocity = forceVelocity + inputVelocity;
-    }
-
-    //자체 구현물리에 의한 외력
-    //수직항력, 마찰력
-    //한번에 작용해야 되기 때문에 Time.deltaTime를 넣지 않음
-    public void AddForceNormal(Vector3 force)
-    {
-        if (isKinematic) return;
-
-        forceVelocity += force / mass;
-        velocity = forceVelocity+ inputVelocity;
-    }
-
-
-
-
-    public void ForceRotation(Quaternion rot)
-    {
-        this.transform.rotation = rot;
-    }
-    
-    public void ForceRotation(Vector3 point, Vector3 force)
-    {
-
-        Vector3 cross = Vector3.Cross(-velocity.normalized, force.normalized);
-        float angleX = Vector3.Angle(this.transform.right, force.normalized);
-        float angleY = Vector3.Angle(this.transform.up, force.normalized);
-        float angleZ = Vector3.Angle(this.transform.forward, force.normalized);
-
-        float angle = Mathf.Min(angleX, angleY, angleZ);
-
-        /*
-        this.transform.rotation = Quaternion.identity;
-        Vector3 cross = Vector3.Cross(-velocity.normalized, force.normalized);
-        float angleX = Vector3.Angle(this.transform.right, force.normalized);
-        float angleY = Vector3.Angle(this.transform.up, force.normalized);
-        float angleZ = Vector3.Angle(this.transform.forward, force.normalized);
-
-        float angle = Mathf.Min(angleX, angleY, angleZ);
-        Debug.Log(angle);
-        if (cross.magnitude > 0.1f && angle < 89f)
+        switch (mode)
         {
-            this.transform.RotateAround(point, cross, angle);
-            //StartCoroutine(Rotation(point, cross, angle));
-        }
-        */
-    }
-    
-
-
-    IEnumerator Rotation(Vector3 rotation)
-    {
-        /*
-        float rot= rotation - this.transform.eulerAngles;
-        while (true)
-        {
-            rot += angle * Time.deltaTime;
-            if (rot >= angle)
+            //일반적인 외력 적용(디폴트)
+            //시간(Time.deltaTime)에 따라 힘이 적용
+            //사용자 키 입력에 따른 외력(이동)에 사용
+            case ForceMode.Force:
+                velocity += force / mass * Time.deltaTime;
                 break;
 
-            yield return new WaitForSeconds(Time.deltaTime);
+            //물리적인 외력이 한번에 적용하기 위해 사용
+            //시간(Time.deltaTime) 고려하지 않아 한번에 힘 적용 가능
+            //충돌에 의한 수직항력과 관련된 물리적 힘에 사용
+            case ForceMode.Impulse:
+                velocity += force / mass;
+                break;
+
+            //일단 구현만 함
+            case ForceMode.Acceleration:
+                velocity += force * Time.deltaTime;
+                break;
+
+            //일단 구현만 함
+            case ForceMode.VelocityChange:
+                velocity += force;
+                break;
         }
-        */
-        yield return null;
     }
+
+
+
+
+    public void AddTorque(Vector3 force, ForceMode mode = ForceMode.Force)
+    {
+
+    }
+
+
+
+   
 
 
     //충돌에 의한 함수 호출

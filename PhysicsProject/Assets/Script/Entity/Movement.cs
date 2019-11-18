@@ -25,6 +25,7 @@ public class Movement : MonoBehaviour
     float inputRotate;
     float inputMove;
     float inputDrift;
+    float turn=0;
 
     // Start is called before the first frame update
     void Start()
@@ -63,21 +64,27 @@ public class Movement : MonoBehaviour
                 state = State.JUMP;
             }
 
-            InputMove();
+            if (isOnRoad)
+            {
+                InputMove();
+
+                if(inputRotate!= 0)
+                    InputRotate();
+
+            }
         }
 
     }
 
     void LateUpdate()
     {
-        if(state != State.DRIFT && skid !=null)
-        {
-        }
     }
 
     public void InputKey()
     {
         inputRotate = Input.GetAxis("Horizontal");
+        if(inputRotate==0)
+            turn = 0;
         inputMove = Input.GetAxis("Vertical");
         inputDrift = Input.GetAxis("Drift");
     }
@@ -103,13 +110,20 @@ public class Movement : MonoBehaviour
                 break;
         }
 
-        rigid.AddForce(transform.forward * inputMove * acceleration * stateAccel);
-        float turn = inputRotate * rotSpeed * Time.deltaTime;
-        this.transform.rotation *= Quaternion.Euler(0, turn, 0);
+        Vector3 speedForward = transform.forward * inputMove * acceleration * stateAccel ;
+        rigid.AddForce(speedForward);
 
-        rigid.velocity = Vector3.Project(rigid.velocity, this.transform.forward);
     }
 
+
+    void InputRotate()
+    {
+        turn = inputRotate * rotSpeed * Time.deltaTime;
+        this.transform.Rotate(new Vector3(0, turn, 0));
+        Vector3 speedRight = transform.right * Mathf.Tan(turn * Mathf.Deg2Rad) * rigid.velocity.magnitude / Time.deltaTime;
+        rigid.AddForce(speedRight);
+        Debug.Log(speedRight);
+    }
 
     void SetSkidMark(bool set)
     {

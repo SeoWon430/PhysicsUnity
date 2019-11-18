@@ -1203,8 +1203,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 690f2a8995d781341883329da5e96bac, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  moveSpeed: 25
+  acceleration: 10
   rotSpeed: 30
+  isControll: 1
+  isOnRoad: 0
+  skidMark: {fileID: 0}
+  state: 0
 --- !u!1 &731251823
 GameObject:
   m_ObjectHideFlags: 0
@@ -1742,7 +1746,7 @@ GameObject:
   - component: {fileID: 1666750521}
   m_Layer: 0
   m_Name: Ground
-  m_TagString: Untagged
+  m_TagString: Ground
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0

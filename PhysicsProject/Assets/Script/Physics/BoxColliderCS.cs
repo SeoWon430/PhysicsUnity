@@ -127,7 +127,6 @@ public class BoxColliderCS : ColliderCS
     public ColliderCS CheckCollision(RigidbodyCS rigid, bool isCheck, bool isCheckNext, out bool isColl, bool isTrigger)
                                     //출돌 체크할 물체, 충돌 체크 여부, 다음 프레임 계산 여부, 충돌 판단 여부, 트리거 여부
 	{
-		
         //충돌 여부 (기본적으로 false)
 		bool result = false;
 
@@ -211,7 +210,6 @@ public class BoxColliderCS : ColliderCS
                         // 충돌한 축에 따라 외력의 방향을 설정
 						if (intervalX > intervalY && intervalX > intervalZ)
                         {
-                            
                             resultDir = (p - centerPoints[0]).magnitude < (p - centerPoints[1]).magnitude
                                 ? this.transform.right : -this.transform.right;
 
@@ -220,7 +218,6 @@ public class BoxColliderCS : ColliderCS
 						}
                         else if (intervalY > intervalX && intervalY > intervalZ)
                         {
-                            
                             resultDir = (p - centerPoints[2]).magnitude < (p - centerPoints[3]).magnitude
                                 ? this.transform.up : -this.transform.up;
 
@@ -230,7 +227,6 @@ public class BoxColliderCS : ColliderCS
                         }
                         else if (intervalZ > intervalY && intervalZ > intervalX)
                         {
-                            
                             resultDir = (p - centerPoints[4]).magnitude < (p - centerPoints[5]).magnitude
                                 ? this.transform.forward : -this.transform.forward;
 

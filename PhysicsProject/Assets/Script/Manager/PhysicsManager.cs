@@ -55,14 +55,16 @@ public class PhysicsManager : MonoBehaviour
     //물리 계산을 위해 고정된 프레임인 FixedUpdate()에서 실행
     void FixedUpdate()
     {
+
         //모든 RigidbodyCS 물체에 대하여
         foreach ( RigidbodyCS rigidObject in rigidbodyList)
         {
+            rigidObject.Overlap();
 
             //일단 RigidbodyCS 물체에 중력 적용
             if (rigidObject.useGravity && !rigidObject.isKinematic)
             {
-                rigidObject.AddForceNormal(gravity * Time.deltaTime);
+                rigidObject.AddForce(gravity * Time.deltaTime, RigidbodyCS.ForceMode.Impulse);
             }
 
             //모든 BoxColliderCS 물체와 충돌 체크
@@ -104,6 +106,7 @@ public class PhysicsManager : MonoBehaviour
         foreach (RigidbodyCS rigidObject in rigidbodyList)
         {
             rigidObject.VelocityMove();
+            rigidObject.Overlap();
         }
     }
 
