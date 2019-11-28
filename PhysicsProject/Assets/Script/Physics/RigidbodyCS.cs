@@ -32,6 +32,15 @@ public class RigidbodyCS : MonoBehaviour
     public float maxSpeed = 100;
 
 
+    //AddForce() 할때 힘을 적용 방식
+    public enum ForceMode
+    {
+        Force,              //deltaTime 과 질량을 고려하여 힘 적용
+        Impulse,            //질량을 고려하여 힘 적용
+        Acceleration,       //deltaTime 을 고려하여 힘 적용
+        VelocityChange      //바로 힘 적용
+    }
+
     public enum Detection
     {
         Default,    //기본 한 프레임 체크
@@ -41,18 +50,8 @@ public class RigidbodyCS : MonoBehaviour
     public Detection collisionDetection = Detection.Default;
 
 
-
-    //현재 물체가 가지는 총 속도
+    //현재 물체가 가지는 속도
 	public Vector3 velocity { get; set; }
-
-    //외력에 의한 외력(물리엔진)
-    //ex 수직항력
-    public Vector3 forceVelocity { get; private set; }
-
-    //사용자 입력에 의한 외력
-    public Vector3 inputVelocity { get; private set; }
-
-
 
     //현재 물체가 가지는 각속도
     public Vector3 angularVelocity { get; private set; }
@@ -72,14 +71,6 @@ public class RigidbodyCS : MonoBehaviour
 
 
 
-    //AddForce() 할때 힘을 적용 방식
-    public enum ForceMode
-    {
-        Force,              //deltaTime 과 질량을 고려하여 힘 적용
-        Impulse,            //질량을 고려하여 힘 적용
-        Acceleration,       //deltaTime 을 고려하여 힘 적용
-        VelocityChange      //바로 힘 적용
-    }
 
     
     //초기화
@@ -87,8 +78,6 @@ public class RigidbodyCS : MonoBehaviour
 	{
 		velocity = Vector3.zero;
         angularDegree = Vector3.zero;
-        inputVelocity = Vector3.zero;
-        forceVelocity = Vector3.zero;
 
         if (mass <= 0)
 			mass = 1;
@@ -113,10 +102,6 @@ public class RigidbodyCS : MonoBehaviour
 
 	void FixedUpdate()
 	{
-
-        angularVelocity = this.transform.eulerAngles - angularDegree;
-        angularDegree = this.transform.eulerAngles;
-        //Debug.Log(angularVelocity);
 
         //물리에 의한 프레임 단위 실행은 FixedUpdate()에서 실행
         //FixedUpdate는 프레임 단위가 고정 되어 실행됨
@@ -144,13 +129,11 @@ public class RigidbodyCS : MonoBehaviour
                 Vector3 normalForce = new Vector3(velocity.x * Mathf.Abs(dir.x), velocity.y * Mathf.Abs(dir.y), velocity.z * Mathf.Abs(dir.z));
 
                 //충돌 물체와 현재 물체의 마찰력 계산
-                // F = 마찰계수 * 수직항력
-                // 마찰계수는 두 물체 간 마찰계수의 합으로 설정
+                // F = 마찰계수 * 수직항력 (마찰계수는 두 물체 간 마찰계수의 합으로 설정)
                 float frictionForce = (coll.fricion + colliderCS.fricion) * normalForce.magnitude;
 
                 //충돌 물체와 현재 물체의 탄성력 계산
-                // F = 탄성계수 * 수직항력
-                // 탄성계수는 두 물체 간 탄성계수의 합으로 설정
+                // F = 탄성계수 * 수직항력 (탄성계수는 두 물체 간 탄성계수의 합으로 설정)
                 normalForce *= (1 + this.colliderCS.boundness + coll.boundness);
 
                 //외력의 방향, 크기 조절
@@ -162,7 +145,6 @@ public class RigidbodyCS : MonoBehaviour
                 //외력의 방향, 크기 재조정
                 normalForce = Vector3.Project(normalForce, dir)* project * project * project;
 
-
                 //탄성력을 포함한 외력 계산
                 //기본적으로 수직항력에 탄성력을 포함하여 적용
                 AddForce(-normalForce, ForceMode.Impulse);
@@ -171,12 +153,10 @@ public class RigidbodyCS : MonoBehaviour
                 //움직이는 방향의 반대로 적용
                 AddForce(-velocity.normalized * frictionForce, ForceMode.Impulse);
 
-
                 //Debug.Log(dir.x + " / " + dir.y + " / " + dir.z);
                 //Debug.DrawRay(this.transform.position, dir * 10, Color.red, 30);
                 //Debug.DrawRay(this.transform.position, -normalForce * 10, Color.green, 30);
             }
-
     }
 
 
@@ -185,6 +165,40 @@ public class RigidbodyCS : MonoBehaviour
     //PhysicsManager.cs에서 일괄 호출
 	public void VelocityMove()
     {
+
+
+        angularVelocity *= (1 - angularDrag);
+        //속도가 일정량 이상인 경우만 물체 이동
+        if (angularVelocity.magnitude > 0.1f)
+        {
+            this.transform.Rotate(this.transform.eulerAngles + angularVelocity);
+
+            if (angularVelocity.y != 0)
+            {
+                Vector3 speedRight = transform.right * Mathf.Tan(angularVelocity.y * Mathf.Deg2Rad) * velocity.magnitude / Time.deltaTime;
+                AddForce(speedRight);
+            }
+
+            if (angularVelocity.x != 0)
+            {
+                Vector3 speedUp = transform.up * Mathf.Tan(angularVelocity.x * Mathf.Deg2Rad) * velocity.magnitude / Time.deltaTime;
+                AddForce(speedUp);
+            }
+
+            if (angularVelocity.z != 0)
+            {
+                Vector3 speedForward = transform.forward * Mathf.Tan(angularVelocity.z * Mathf.Deg2Rad) * velocity.magnitude / Time.deltaTime;
+                AddForce(speedForward);
+            }
+        }
+        else
+        {
+            angularVelocity = Vector3.zero;
+        }
+
+
+
+
         //속도는 공기저항에 따라 방해 받음
         //실제 유니티의 drag가 구체적으로 어떻게 작용하는지 몰라 임의로 계산함
         //(원래는 drag가 무한 일 경우에 물체는 움직이지 않는다고 함)
@@ -205,7 +219,6 @@ public class RigidbodyCS : MonoBehaviour
             velocity = Vector3.zero;
         }
 
-
     }
 
 
@@ -222,7 +235,7 @@ public class RigidbodyCS : MonoBehaviour
             if (overlap < 0)
             {
 
-                this.transform.position -= coll.contactNormal * overlap * 0.4f;
+                this.transform.position -= coll.contactNormal * overlap * 1f;
                 //Debug.Log(overlap);
 
             }
@@ -275,6 +288,29 @@ public class RigidbodyCS : MonoBehaviour
 
     public void AddTorque(Vector3 force, ForceMode mode = ForceMode.Force)
     {
+        //이 물체가 물리적 계산을 안할 경우 외력을 주지 않도록 함
+        if (isKinematic) return;
+
+
+        switch (mode)
+        {
+            case ForceMode.Force:
+                angularVelocity += force / mass * Time.deltaTime;
+                break;
+
+            case ForceMode.Impulse:
+                angularVelocity += force / mass;
+                break;
+
+            case ForceMode.Acceleration:
+                angularVelocity += force * Time.deltaTime;
+                break;
+
+            case ForceMode.VelocityChange:
+                angularVelocity += force;
+                break;
+        }
+
 
     }
 

@@ -48,11 +48,11 @@ public class BoxColliderCS : ColliderCS
 		else
 			isStatic = true;
 
-
+        //구성점을 저장할 배열
 		points = new Vector3[8];
         centerPoints = new Vector3[6];
 
-        //현재 시점에서 콜라이더 구성의 점을 계산
+        //현재 시점에서 콜라이더 구성점을 계산
         SetBoundaryPoint();
 
         //콜라이더 사이즈와 현재 물체의 스케일을 고려하여 x,y,z 상 충돌거리 계산
@@ -93,9 +93,11 @@ public class BoxColliderCS : ColliderCS
 
 
     //현재 상태에서 콜라이더 구성 점을 계산
-	void SetBoundaryPoint()
+	private void SetBoundaryPoint()
 	{
-		centerPosition = this.transform.position + center;
+        //points는 물체의 구성점 8개
+        //centerPoints 물체의 각 구성면 6개의 중심점
+        centerPosition = this.transform.position + center;
 
         for (int i = 0; i<points.Length; i++)
 		{
@@ -117,7 +119,6 @@ public class BoxColliderCS : ColliderCS
         centerPoints[3] = centerPosition - this.transform.up * length.y;
         centerPoints[4] = centerPosition + this.transform.forward * length.z;
         centerPoints[5] = centerPosition - this.transform.forward * length.z;
-
     }
 
 

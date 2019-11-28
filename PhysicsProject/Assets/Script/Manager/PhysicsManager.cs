@@ -7,14 +7,11 @@ using UnityEngine;
 //RigidbodyCS와 BoxColliderCS에 대해 충돌을 판단
 public class PhysicsManager : MonoBehaviour
 {
-    //현재 스크립트는 static으로 관리
-    public static PhysicsManager instance;
-
     //현재 Scene에 존재하는 모든 BoxColliderCS 물체
-    public List<BoxColliderCS> colliderList;
+    private List<BoxColliderCS> colliderList;
 
     //현재 Scene에 존재하는 모든 RigidbodyCS 물체
-    public List<RigidbodyCS> rigidbodyList;
+    private List<RigidbodyCS> rigidbodyList;
 
     //현재 Scene에 적용할 중력
     //기본적으로 -y방향 9.81
@@ -22,11 +19,10 @@ public class PhysicsManager : MonoBehaviour
 
 
 
-    //현재 객체 static 저장
     void Awake()
     {
-        if (instance == null)
-            instance = this;
+        colliderList = new List<BoxColliderCS>();
+        rigidbodyList = new List<RigidbodyCS>();
     }
 
 
@@ -36,17 +32,12 @@ public class PhysicsManager : MonoBehaviour
         //현재 Scene에 존재하는 모든 RigidbodyCS 물체 파악
         RigidbodyCS[] rigids = FindObjectsOfType<RigidbodyCS>();
 		foreach (var r in rigids)
-		{
 			rigidbodyList.Add(r);
-		}
          
         //현재 Scene에 존재하는 모든 BoxColliderCS 물체 파악
         BoxColliderCS[] colls = FindObjectsOfType<BoxColliderCS>();
 		foreach(var c in colls)
-		{
 			colliderList.Add(c);
-		}
-
 
     }
 
@@ -64,7 +55,7 @@ public class PhysicsManager : MonoBehaviour
             //일단 RigidbodyCS 물체에 중력 적용
             if (rigidObject.useGravity && !rigidObject.isKinematic)
             {
-                rigidObject.AddForce(gravity * Time.deltaTime, RigidbodyCS.ForceMode.Impulse);
+                rigidObject.AddForce(gravity);
             }
 
             //모든 BoxColliderCS 물체와 충돌 체크
@@ -84,8 +75,7 @@ public class PhysicsManager : MonoBehaviour
                 //RigidbodyCS물체와 BoxColliderCS물체의 트리거 체크
                 bool isTrigger = rigidObject.colliderCS.isTrigger || collObject.isTrigger;
 
-                //RigidbodyCS물체와 BoxColliderCS물체의 충돌 체크
-                //길어서 따로 함수로 구현
+                //RigidbodyCS물체와 BoxColliderCS물체의 충돌 체크 함수
                 CheckCollision(rigidObject, collObject, isTrigger);
 
 
@@ -97,22 +87,23 @@ public class PhysicsManager : MonoBehaviour
                 rigidObject.MovementForce();
         }
 
-	}
-
-
-    //각 RigidbodyCS물체에서 모든 외력을 계산하여 속도가 결정이 되고 난 후 물체가 움직이도록 실행
-    private void LateUpdate()
-    {
+        //각 RigidbodyCS물체에서 모든 외력을 계산하여 속도가 결정이 되고 난 후 물체가 움직이도록 실행
         foreach (RigidbodyCS rigidObject in rigidbodyList)
         {
             rigidObject.VelocityMove();
             rigidObject.Overlap();
         }
+
+    }
+
+
+    private void LateUpdate()
+    {
     }
 
 
 
-    //RigidbodyCS와 BoxColliderCS 물체에 대해 충돌을 계산
+    //RigidbodyCS와 BoxColliderCS 물체에 대해 충돌을 계산을 실행
     //isTrigger가 ture면 충돌 했는지만 계산하고 외력을 계산x
     private void CheckCollision(RigidbodyCS rigidObject, BoxColliderCS collObject, bool isTrigger)
     {
@@ -234,10 +225,10 @@ public class PhysicsManager : MonoBehaviour
 
 
     //레이케스트 구현
-    bool RayCast(Vector3 start, Vector3 end, out BoxCollider collider)
+    public bool RayCastF(Vector3 start, Vector3 end, out ColliderCS collider)
     {
         bool result = false;
-        BoxCollider resultCollider = new BoxCollider();
+        ColliderCS resultCollider = new ColliderCS();
 
 
 

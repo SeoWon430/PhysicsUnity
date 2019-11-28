@@ -417,9 +417,10 @@ GameObject:
   - component: {fileID: 173878721}
   - component: {fileID: 173878720}
   - component: {fileID: 173878719}
+  - component: {fileID: 173878722}
   m_Layer: 0
   m_Name: Cube (7)
-  m_TagString: Finish
+  m_TagString: Ground
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -502,6 +503,18 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 173878717}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!114 &173878722
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 173878717}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b89ce36ad565f1443b2a68d6fd4c2cf2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &225459264
 GameObject:
   m_ObjectHideFlags: 0
@@ -1183,14 +1196,14 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 725358010}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -5.9, y: 4.1, z: -29.41}
+  m_LocalRotation: {x: 0, y: 0.7071068, z: 0, w: 0.7071068}
+  m_LocalPosition: {x: -31.63, y: 4.1, z: -7}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 534669905}
   m_Father: {fileID: 0}
   m_RootOrder: 1
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 90, z: 0}
 --- !u!114 &725358016
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1203,11 +1216,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 690f2a8995d781341883329da5e96bac, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  acceleration: 10
+  acceleration: 20
   rotSpeed: 30
   isControll: 1
   isOnRoad: 0
   skidMark: {fileID: 0}
+  skidPosition: {fileID: 0}
+  dustParticle: {fileID: 0}
+  boostParticle: {fileID: 0}
   state: 0
 --- !u!1 &731251823
 GameObject:
@@ -1433,8 +1449,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0aa1aa9223c8c5b47826701be34fabf8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  colliderList: []
-  rigidbodyList: []
   gravity: {x: 0, y: -9.81, z: 0}
 --- !u!114 &1127387825
 MonoBehaviour:
