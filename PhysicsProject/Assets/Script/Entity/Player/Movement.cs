@@ -7,6 +7,7 @@ public class Movement : MonoBehaviour
     public enum State
     {
         NONE,
+        START,
         STOP,
         MOVE,
         DRIFT,
@@ -17,7 +18,7 @@ public class Movement : MonoBehaviour
     public RigidbodyCS rigid { get; private set; }
     public float acceleration = 30;
     public float rotSpeed=15;
-    public bool isControll = true;
+    public bool isControll = false;
     public bool isOnRoad = false;
     public GameObject body;
     public GameObject skidMark;
@@ -26,7 +27,7 @@ public class Movement : MonoBehaviour
     public ParticleSystem dustParticle;
     public ParticleSystem boostParticle;
 
-    public State state = State.NONE;
+    public State stateCurrent;
 
     private float inputRotate;
     private float inputMove;
@@ -38,12 +39,24 @@ public class Movement : MonoBehaviour
     private float turnPrev = 0;
 
     private float rigidSpeed = 0;
-    private float rigidSpeedPrev = 0;
+
+
+    public GameObject collParticle;
+    private ParticleSystem[] particles;
+
+    private AudioSource audioSource;
+    public AudioClip clipRun;
+    public AudioClip clipDrift;
+    public AudioClip clipCollision;
 
     // Start is called before the first frame update
     void Start()
     {
         rigid = GetComponentInChildren<RigidbodyCS>();
+        if(collParticle!= null)
+            particles = collParticle.GetComponentsInChildren<ParticleSystem>();
+        audioSource = GetComponent<AudioSource>();
+
         if (!rigid)
             isControll = false;
 
@@ -57,11 +70,12 @@ public class Movement : MonoBehaviour
 
     void Init()
     {
+        stateCurrent = State.NONE;
+
         turn = 0;
         turnPrev = 0;
 
         rigidSpeed = 0;
-        rigidSpeedPrev = 0;
         inputRotate = 0;
         inputMove = 0;
         inputDrift = 0;
@@ -73,47 +87,44 @@ public class Movement : MonoBehaviour
     // Update is called once per frame
     void FixedUpdate()
     {
+        if (!isControll)
+            return;
+
         rigidSpeed = rigid.velocity.magnitude;
 
-        if (isControll)
+        InputKey();
+
+        if (isOnRoad && rigidSpeed > 1f)
         {
-            InputKey();
-
-            if (isOnRoad && rigidSpeed > 1f)
+            if (inputDrift > 0.1f)
             {
-                if (inputDrift > 0.1f)
-                {
-                    state = State.DRIFT;
-                    SetSkidMark(true);
-                }
-                else
-                {
-                    state = State.MOVE;
-                    SetSkidMark(false);
-                }
+                ChangeState(State.DRIFT);
             }
-            else if (isOnRoad && rigidSpeed <= 0.1f)
+            else
             {
-                state = State.STOP;
-            }
-            else if (!isOnRoad && rigidSpeed > 0.1f)
-            {
-                state = State.JUMP;
-            }
-
-            if (isOnRoad)
-            {
-
-                InputMove();
-                if (inputRotate!= 0)
-                    InputRotate();
-
+                ChangeState(State.MOVE);
             }
         }
+        else if (isOnRoad && rigidSpeed <= 0.1f)
+        {
+            ChangeState(State.STOP);
+        }
+        else if (!isOnRoad && rigidSpeed > 0.1f)
+        {
+            ChangeState(State.JUMP);
+        }
+
+        if (isOnRoad)
+        {
+            InputMove();
+            if (inputRotate!= 0)
+                InputRotate();
+        }
+        
+
 
         if (dustParticle != null)
         {
-
             if (rigidSpeed > 10f)
             {
                 dustParticle.gameObject.SetActive(true);
@@ -123,14 +134,11 @@ public class Movement : MonoBehaviour
                 dustParticle.gameObject.SetActive(false);
         }
 
-        rigidSpeedPrev = rigidSpeed;
 
     }
 
     void LateUpdate()
     {
-        if (rigidSpeed < 1f)
-            body.transform.localRotation = new Quaternion(initRot.x, 0, 0, 1);
     }
 
     public void InputKey()
@@ -155,6 +163,11 @@ public class Movement : MonoBehaviour
             boostParticle.Play();
         }
 
+        if (Input.GetKeyDown(KeyCode.M))
+        {
+            rigid.AddForce(this.transform.up * 50, RigidbodyCS.ForceMode.Impulse);
+        }
+
     }
 
 
@@ -166,7 +179,7 @@ public class Movement : MonoBehaviour
         }
 
         float stateAccel = 1;
-        switch (state)
+        switch (stateCurrent)
         {
             case State.STOP:
                 stateAccel = 1;
@@ -202,9 +215,12 @@ public class Movement : MonoBehaviour
             return;
         }
 
-        //inputRotate -= inputDrift * 0.25f;
+
         turn = inputRotate * rotSpeed * Time.deltaTime;
+        /*
+        //inputRotate -= inputDrift * 0.25f;
         body.transform.RotateAround(body.transform.position, body.transform.forward, (turnPrev- turn)*10);
+        */
 
         this.transform.Rotate(new Vector3(0, turn, 0));
         float speed = rigidSpeed;
@@ -244,6 +260,7 @@ public class Movement : MonoBehaviour
 
     public IEnumerator Boost(Vector3 dir, float accel)
     {
+        Debug.Log(dir + " " + accel);
         float max = rigid.maxSpeed;
         rigid.maxSpeed += accel ;
         rigid.AddForce(dir * accel, RigidbodyCS.ForceMode.Impulse);
@@ -251,12 +268,67 @@ public class Movement : MonoBehaviour
         rigid.maxSpeed = max;
     }
 
+
+
+    void ChangeState(State state) 
+    {
+        switch (state)
+        {
+            case State.START:
+                break;
+            case State.STOP:
+                break;
+            case State.MOVE:
+                SetSkidMark(false);
+                SoundPlay(clipRun);
+                break;
+            case State.DRIFT:
+                SetSkidMark(true);
+                SoundPlay(clipDrift);
+                break;
+            case State.COLLISION:
+                SoundPlay(clipCollision);
+                break;
+            case State.JUMP:
+                break;
+            default:
+                break;
+
+        }
+        stateCurrent = state;
+    }
+
+
+
+    void SoundPlay(AudioClip stateSound)
+    {
+        if (audioSource.clip!=null && audioSource.clip.Equals(stateSound))
+        {
+            audioSource.loop = true;
+        }
+        else
+        {
+            audioSource.loop = false;
+            audioSource.clip = stateSound;
+            audioSource.Play();
+        }
+
+
+    }
+
+
+
     void OnCollisionEnterF(ColliderCS coll)
     {
-        if (coll.CompareTag("Wall"))
+        ChangeState(State.COLLISION);
+        if (coll.CompareTag("Wall") || coll.CompareTag("Obstacle"))
         {
             Init();
-            Debug.Log(initRot);
+            foreach (ParticleSystem particle in particles)
+            {
+                particle.transform.position = coll.contactPoint + new Vector3(0, 0.5f, 0);
+                particle.Play();
+            }
         }
     }
 
@@ -277,7 +349,6 @@ public class Movement : MonoBehaviour
         else if (coll.CompareTag("Wall"))
         {
             Init();
-            Debug.Log(initRot);
         }
     }
 

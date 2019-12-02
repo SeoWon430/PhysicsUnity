@@ -4,5 +4,11 @@
 EditorBuildSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 2
-  m_Scenes: []
+  m_Scenes:
+  - enabled: 1
+    path: Assets/Scenes/Rider_Main.unity
+    guid: 6cfbbe8fd93f10e4a806066b88459e11
+  - enabled: 1
+    path: Assets/Scenes/Rider_Play.unity
+    guid: afdd3327ecd11f9408e90385cd5ea729
   m_configObjects: {}

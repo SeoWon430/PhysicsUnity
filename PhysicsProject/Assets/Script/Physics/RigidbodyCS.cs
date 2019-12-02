@@ -226,20 +226,17 @@ public class RigidbodyCS : MonoBehaviour
     //겹쳐진 양(overlap) 만큼 되돌림
     public void Overlap()
     {
-
         foreach (ColliderCS coll in contactObjects)
         {
             Vector3 distance = coll.centerPosition - colliderCS.points[coll.contactPointNumber];
+            //Debug.DrawRay(coll.centerPosition, distance, Color.red, 10);
             Vector3 project = Vector3.Project(distance, coll.contactNormal);
             float overlap = project.magnitude - coll.contactLength;
-            if (overlap < 0)
+            Debug.Log(overlap);
+            if (overlap < -0f)
             {
-
-                this.transform.position -= coll.contactNormal * overlap * 1f;
-                //Debug.Log(overlap);
-
+                this.transform.position -= coll.contactNormal * overlap;
             }
-
         }
     }
 

@@ -50,7 +50,7 @@ public class PhysicsManager : MonoBehaviour
         //모든 RigidbodyCS 물체에 대하여
         foreach ( RigidbodyCS rigidObject in rigidbodyList)
         {
-            rigidObject.Overlap();
+            //rigidObject.Overlap();
 
             //일단 RigidbodyCS 물체에 중력 적용
             if (rigidObject.useGravity && !rigidObject.isKinematic)

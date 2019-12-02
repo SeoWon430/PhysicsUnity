@@ -6,10 +6,9 @@ public class Track : MonoBehaviour
 {
     public string trackName;
     public int trackCount;
-    public float timeLimit;
+    public int playerCount;
 
     public GameObject[] startPoints;
-
 
 
 
