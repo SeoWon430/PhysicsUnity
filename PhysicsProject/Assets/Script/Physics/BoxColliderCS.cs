@@ -142,7 +142,7 @@ public class BoxColliderCS : ColliderCS
 		float Overlap = 0;
 
         //충돌 체크 할 물체(RigidbodyCS.cs)와 현재 물체의 거리가 멀면 현재 함수 생략
-        if ( (maxLength + rigid.colliderCS.maxLength) * 1.5f > distance.magnitude)
+        if ( (maxLength + rigid.colliderCS.maxLength) * 1.1f > distance.magnitude)
         {
 
             //충돌 체크 할 물체(RigidbodyCS.cs)의 콜라이더 구성 점(points)의 인덱스
@@ -154,7 +154,7 @@ public class BoxColliderCS : ColliderCS
 			{
                 //충돌 체크 할 물체(RigidbodyCS.cs)의 콜라이더 구성 점(points)중 하나
                 Vector3 p = point;
-                p = point + rigid.velocity * Time.deltaTime / 2;
+                p = point + rigid.velocity * Time.deltaTime;
 
 
                 //현재 물체가 회전 되어 있음을 고려하여 p를 현재 local 상 x, y, z축으로 project계산

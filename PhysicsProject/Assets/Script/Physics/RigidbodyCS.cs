@@ -232,7 +232,7 @@ public class RigidbodyCS : MonoBehaviour
             //Debug.DrawRay(coll.centerPosition, distance, Color.red, 10);
             Vector3 project = Vector3.Project(distance, coll.contactNormal);
             float overlap = project.magnitude - coll.contactLength;
-            Debug.Log(overlap);
+            //Debug.Log(overlap);
             if (overlap < -0f)
             {
                 this.transform.position -= coll.contactNormal * overlap;

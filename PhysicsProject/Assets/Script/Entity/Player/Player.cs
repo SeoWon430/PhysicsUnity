@@ -22,7 +22,7 @@ public class Player : MonoBehaviour
     public Image imageSpeed;
 
     private bool isTrack;
-    private bool isEnd;
+    public bool isEnd { get; private set; }
 
     private bool isInit;
     private float[] trackTime;
@@ -111,21 +111,23 @@ public class Player : MonoBehaviour
     void LateUpdate()
     {
         speed = (int)playerMovement.rigid.velocity.magnitude;
-        if (GameManager.instance.isStart)
+        if (GameManager.instance.isStart && !isEnd)
         {
             ShowInformationUI();
         }
+        if(!isEnd && trackCount == trackCurrent && speed < 0.5f)
+        {
+            isEnd = true;
+        }
+
     }
 
 
     void ShowInformationUI()
     {
-        if (!isEnd)
-        {
-            textBestTime.text = "Best Time : " + bestTime.ToString("F1") + "s";
-            textTime.text = "Play Time : " + GameManager.instance.timer.ToString("F1") + "s";
-            textFps.text = "Fps : " + fps.ToString("F1") + "s";
-        }
+        textBestTime.text = "Best Time : " + bestTime.ToString("F1") + "s";
+        textTime.text = "Play Time : " + GameManager.instance.timer.ToString("F1") + "s";
+        textFps.text = "Fps : " + fps.ToString("F1") + "s";
         if (Time.time % 2 < 0.1f)
             fps = 1 / Time.deltaTime;
 
@@ -171,7 +173,6 @@ public class Player : MonoBehaviour
 
                 if (trackCount == trackCurrent)
                 {
-                    isEnd = true;
                     playerMovement.isControll = false;
                     playerMovement.rigid.AddForce(-playerMovement.rigid.velocity * 0.5f, RigidbodyCS.ForceMode.Impulse);
                     speed = 0;

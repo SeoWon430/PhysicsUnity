@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 public class GameManager : MonoBehaviour
@@ -64,7 +65,12 @@ public class GameManager : MonoBehaviour
         else if (isReady && isStart)
         {
             timer += Time.deltaTime;
+
+            if (PlayEnd())
+                LoadMainScene();
+
         }
+
     }
 
 
@@ -93,7 +99,16 @@ public class GameManager : MonoBehaviour
     }
 
 
+    bool PlayEnd()
+    {
+        bool playEnd = true;
+        for (int i = 0; i < players.Count; i++)
+        {
+            playEnd = playEnd && players[i].isEnd;
+        }
 
+        return playEnd;
+    }
 
     public Track SetTrack(int trackNumber)
     {
@@ -103,6 +118,12 @@ public class GameManager : MonoBehaviour
         GameObject track = Instantiate(trackMaps[trackNumber].gameObject);
 
         return track.GetComponent<Track>();
+    }
+
+
+    public void LoadMainScene()
+    {
+        SceneManager.LoadScene(0);
     }
 
 }

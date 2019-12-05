@@ -25,8 +25,15 @@ public class ResetPosition : MonoBehaviour
         }
         if (Input.GetKeyDown(KeyCode.R))
         {
-            this.transform.position = resetpoint.transform.position;
-            this.transform.rotation = resetpoint.transform.rotation;
+            ReturnPosition();
         }
+    }
+
+    public void ReturnPosition()
+    {
+        this.transform.position = resetpoint.transform.position;
+        this.transform.rotation = resetpoint.transform.rotation;
+        playerRigid.AddForce(-playerRigid.velocity, RigidbodyCS.ForceMode.Impulse);
+
     }
 }
